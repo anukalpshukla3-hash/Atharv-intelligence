@@ -1,0 +1,35 @@
+{
+    email ${ACME_EMAIL}
+    admin off
+}
+
+${DOMAIN} {
+    # Frontend (Next.js)
+    handle_path /login* {
+        reverse_proxy frontend:3000
+    }
+    handle_path /admin* {
+        reverse_proxy frontend:3000
+    }
+    handle {
+        reverse_proxy frontend:3000
+    }
+
+    # Backend API + WebSocket
+    handle_path /api* {
+        reverse_proxy backend:4000
+    }
+    handle_path /health {
+        reverse_proxy backend:4000
+    }
+    handle_path /socket.io* {
+        reverse_proxy backend:4000
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}

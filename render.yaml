@@ -1,0 +1,47 @@
+# render.yaml - Deploy Atharv Intelligence to Render
+services:
+  # Backend API + WebSocket
+  - type: web
+    name: atharv-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://atharv-frontend.onrender.com
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Frontend (Next.js)
+  - type: web
+    name: atharv-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    buildCommand: ""
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://atharv-backend.onrender.com
+      - key: NEXT_PUBLIC_SOCKET_URL
+        value: https://atharv-backend.onrender.com
+      - key: NEXT_PUBLIC_UPLOAD_FOLDER
+        value: user
+    autoDeploy: true
+
+  # Cron job to keep free tier alive (optional)
+  # - type: cron
+  #   name: keep-alive
+  #   schedule: "*/14 * * * *"
+  #   command: curl -sf https://atharv-backend.onrender.com/health > /dev/null
