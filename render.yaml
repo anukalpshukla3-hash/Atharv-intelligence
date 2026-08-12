@@ -16,7 +16,7 @@ services:
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
-      - key: JWT_SECRET
+      - key: ADMIN_JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
         value: https://atharv-frontend.onrender.com
