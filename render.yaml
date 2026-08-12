@@ -1,10 +1,13 @@
-# render.yaml - Deploy Atharv Intelligence to Render
+# render.yaml - Deploy Atharv Intelligence to Render (native Node, free tier)
 services:
   # Backend API + WebSocket
   - type: web
     name: atharv-backend
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
+    runtime: node
+    baseDirectory: backend
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -26,9 +29,11 @@ services:
   # Frontend (Next.js)
   - type: web
     name: atharv-frontend
-    runtime: docker
-    dockerfilePath: ./frontend/Dockerfile
-    buildCommand: ""
+    runtime: node
+    baseDirectory: frontend
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
