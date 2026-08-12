@@ -28,6 +28,6 @@ const io = new Server(server, {
 registerRoutes(app);
 registerSocketHandlers(io);
 
-server.listen(config.port, () => {
-  console.log(`Atharv Intelligence backend listening on :${config.port}`);
+server.listen(config.port, '0.0.0.0', () => {
+  console.log(`Atharv Intelligence backend listening on 0.0.0.0:${config.port}`);
 });
