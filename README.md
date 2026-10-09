@@ -1,125 +1,132 @@
-# Atharv Intelligence[AI]
+# Atharv Intelligence
 
-A sleek, "Wizard of Oz" style AI companion platform. Visitors chat with what looks like
-an AI reasoning interface — sending text, images, and voice notes — while all traffic is
-routed in real time to a hidden **Command Center**, where an operator (Atharv) replies.
-The reply is piped straight back to the visitor as if the "AI" answered.
+A real-time AI companion interface with a visitor chat and a private operator Command Center. Visitors can send text, images, and voice notes; messages are routed to the operator, whose replies are delivered live over Socket.IO.
 
-Stack: **Next.js 14** (frontend) + **Node.js/Express + Socket.io** (backend) + **Supabase**
-(Postgres, Auth, Storage). Fully managed infrastructure — nothing to self-host.
+## Architecture
 
+- **Frontend:** Next.js 14, React, TypeScript (`frontend/`)
+- **Backend:** Node.js, Express, Socket.IO, TypeScript (`backend/`)
+- **Database, authentication, and file storage:** Supabase
+- **Hosting:** Vercel for the frontend and Render for the backend
+
+The browser connects to the backend for REST API requests and real-time Socket.IO events. Supabase stores conversations and attachments. The Supabase service-role key and admin JWT secret must remain on the backend.
+
+## Repository layout
+
+```text
+.
+├── frontend/                 # Next.js web app, deployed to Vercel
+├── backend/                  # Express + Socket.IO server, deployed to Render
+├── supabase/schema.sql       # Database tables, policies, and storage setup
+├── DEPLOYMENT.md             # Deployment notes
+└── docker-compose.yml        # Local/container setup
 ```
-myproject/
-├─ frontend/            Next.js app
-│  ├─ app/page.tsx      → /       visitor chat
-│  ├─ app/admin/        → /admin  Command Center
-│  ├─ app/login/        → /login  operator sign-in
-│  └─ components/       chat UI, admin UI, shared bits
-├─ backend/             Express + Socket.io
-│  ├─ src/index.ts      server bootstrap
-│  ├─ src/sockets.ts    real-time routing (user:send, admin:reply, typing)
-│  └─ src/routes.ts     REST: sign-in, history, uploads, admin APIs
-└─ supabase/schema.sql  tables + RLS + storage bucket + admin setup
-```
 
-## How it works
+## Deploy the frontend and backend
 
-1. A visitor opens the site. The browser generates an anonymous `visitor_id`
-   (persisted in `localStorage`) and opens a WebSocket.
-2. Text / image / voice is sent over the socket, persisted to Supabase, and pushed
-   instantly to every connected Command Center tab.
-3. The operator picks the conversation from the queue, replies (text / image / voice),
-   and the reply is delivered over the socket to that specific visitor — showing
-   "Atharv Intelligence is processing…" or live typing dots along the way.
-4. Media uploads go straight from the browser to Supabase Storage via short-lived
-   signed URLs issued by the backend.
+Deploy the two app folders as separate services from this GitHub repository. Keep the existing Supabase project and database; do not create a replacement just for deployment.
 
-### Socket protocol
+### 1. Deploy the backend on Render
 
-| Event | Direction | Payload | Notes |
-| --- | --- | --- | --- |
-| `user:send` | visitor → server | `{ kind, content?, mediaUrl?, mimeType? }` | rate-limited (6 / 10s) |
-| `user:ack` | server → visitor | `{ message }` | persisted message |
-| `user:message` | server → visitor | `{ message }` | operator reply delivered |
-| `user:typing` | server → visitor | `{ isTyping }` | operator is composing |
-| `admin:newMessage` | server → admin | `{ conversation, message }` | new queue item / unread |
-| `admin:update` | server → admin | `{ conversation?, message?, closed? }` | refresh other admin tabs |
-| `admin:typing` | server → admin | `{ conversationId, isTyping }` | visitor is composing |
-| `admin:reply` | admin → server | `{ conversationId, kind, ... }` | send a reply |
-| `admin:close` | admin → server | `{ conversationId }` | mark conversation closed |
-| `typing` | both → server | `{ conversationId?, isTyping }` | typed-indicator relay |
+1. Open [Render](https://render.com/) and create a **Web Service** from this repository.
+2. Select the `main` branch.
+3. Set **Root Directory** to `backend`.
+4. Set **Build Command** to `npm install && npm run build`.
+5. Set **Start Command** to `npm start`.
+6. Add the environment variables listed below, using your own values from Supabase and a newly generated secret.
+7. Deploy. Copy the public service URL from Render. The URL used for this project is `https://atharv-intelligence-backend.onrender.com` if that is still the URL shown in your Render dashboard.
 
-Admin sockets authenticate with a JWT issued by `POST /api/admin/sign-in`;
-visitor sockets authenticate by carrying their `visitorId`.
+Render environment variables:
+
+| Variable | Value |
+| --- | --- |
+| `NODE_ENV` | `production` |
+| `PORT` | Usually supplied by Render; the server defaults to `4000` locally |
+| `SUPABASE_URL` | Project URL from Supabase project API settings |
+| `SUPABASE_ANON_KEY` | Supabase publishable/anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role **secret** key; backend only |
+| `ADMIN_JWT_SECRET` | A long, random secret generated for this app |
+| `CORS_ORIGINS` | Exact deployed Vercel origin, e.g. `https://your-project.vercel.app`, with no trailing slash |
+| `STORAGE_BUCKET` | `attachments` |
+
+Do not put real secret values in this README, commit them to Git, or expose the service-role key in a `NEXT_PUBLIC_` variable. `CORS_ORIGINS` may be left blank only while the frontend URL is not known yet; set it to the real Vercel URL and redeploy the backend afterward.
+
+### 2. Deploy the frontend on Vercel
+
+1. Open [Vercel](https://vercel.com/) and import this repository.
+2. Set **Root Directory** to `frontend`.
+3. Use the **Next.js** framework preset. Vercel should detect the install and build commands automatically.
+4. Add these environment variables for Production (and Preview if you want preview deployments to connect to the backend):
+
+| Variable | Value |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | `https://atharv-intelligence-backend.onrender.com` |
+| `NEXT_PUBLIC_SOCKET_URL` | `https://atharv-intelligence-backend.onrender.com` |
+| `NEXT_PUBLIC_UPLOAD_FOLDER` | `user` |
+
+Replace the backend URL if Render shows a different service URL. Do not add a trailing slash. Deploy the frontend and copy its final public URL.
+
+### 3. Connect the services
+
+1. In Render, set `CORS_ORIGINS` to the exact Vercel origin, such as `https://your-project.vercel.app`.
+2. Save the environment variable and trigger a new Render deploy.
+3. In Vercel, confirm both `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SOCKET_URL` point to the deployed Render service, then redeploy if you changed them.
+4. Open the Vercel site and test a visitor chat and the operator login/Command Center.
+
+The frontend and backend URLs serve different purposes: visitors open the Vercel URL, while browser API and Socket.IO connections use the Render URL. A successful frontend deployment does not by itself prove the backend is healthy, and vice versa.
 
 ## Local development
 
-### 1. Supabase
+Prerequisites: a current Node.js LTS release and an existing Supabase project configured with the schema.
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor** and run `supabase/schema.sql`.
-3. In **Authentication → Users → Add user**, create the operator account
-   (e.g. `atharv@atharvintelligence.com`).
-4. Copy the new user's UUID and run:
-   ```sql
-   insert into public.admin_users (id, display_name)
-   values ('<user-uuid>', 'Atharv');
-   ```
+### 1. Configure Supabase
 
-### 2. Backend
+1. Open the Supabase SQL Editor and run [`supabase/schema.sql`](supabase/schema.sql).
+2. In Supabase Authentication, create the operator user.
+3. Copy that user's UUID and add it to `public.admin_users` according to the schema and existing setup instructions.
+
+### 2. Start the backend
 
 ```bash
 cd backend
-cp .env.example .env      # fill in Supabase URL + service role key + JWT secret
-npm install
-npm run dev               # http://localhost:4000
+cp .env.example .env
 ```
 
-Generate the JWT secret with:
+Fill in `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `ADMIN_JWT_SECRET`. For local frontend access, set `CORS_ORIGINS=http://localhost:3000`. Then run:
+
 ```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+npm install
+npm run dev
 ```
 
-### 3. Frontend
+The backend listens on port `4000` by default.
+
+### 3. Start the frontend
+
+In a second terminal:
 
 ```bash
 cd frontend
-cp .env.local.example .env.local   # defaults already point at localhost:4000
+cp .env.local.example .env.local
 npm install
-npm run dev               # http://localhost:3000
+npm run dev
 ```
 
-Open `http://localhost:3000` in one tab (visitor) and `http://localhost:3000/login`
-in another (operator). Messages flow between them instantly.
+The example frontend environment file points to `http://localhost:4000`. Open `http://localhost:3000` for the visitor chat and `http://localhost:3000/login` for the operator sign-in page.
 
-## Env vars
+## Troubleshooting deployments
 
-| Backend (`backend/.env`) | Purpose |
-| --- | --- |
-| `PORT` | HTTP/WS port (default 4000) |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key — **server secret, never exposed** |
-| `ADMIN_JWT_SECRET` | Secret used to sign operator session JWTs |
-| `CORS_ORIGINS` | Comma-separated allowed browser origins |
-| `STORAGE_BUCKET` | Storage bucket name (default `attachments`) |
+- **Vercel build fails:** Check that the Vercel project's Root Directory is `frontend` and inspect the first build error. The frontend package scripts include `build` and `typecheck`.
+- **Render build fails:** Check that the Render service Root Directory is `backend`, with build command `npm install && npm run build` and start command `npm start`. Confirm required environment variables are present; the backend exits during startup if required values are missing.
+- **Site loads but chat cannot connect:** Verify both `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SOCKET_URL` point to the Render URL, then redeploy Vercel after changing either value.
+- **CORS or Socket.IO connection errors:** Set `CORS_ORIGINS` to the exact Vercel origin. Multiple allowed origins can be comma-separated.
+- **Operator sign-in fails:** Verify the Supabase project URL and keys, `ADMIN_JWT_SECRET`, and that the operator account is configured in `public.admin_users`.
+- **Uploads fail:** Verify the `attachments` storage bucket exists and that `STORAGE_BUCKET=attachments` is set on Render.
+- **A deployment is marked failed:** Open that service's build/deploy logs and fix the first actual error. Updating documentation alone will not repair a failed build.
 
-| Frontend (`frontend/.env.local`) | Purpose |
-| --- | --- |
-| `NEXT_PUBLIC_API_URL` | Backend base URL (REST) |
-| `NEXT_PUBLIC_SOCKET_URL` | Backend socket URL (WebSocket) |
-| `NEXT_PUBLIC_UPLOAD_FOLDER` | Storage folder for visitor uploads (default `user`) |
+## Security
 
-## Security notes
-
-- Visitors never talk to the database; every write goes through the backend's
-  service role client. RLS restricts tables to `admin_users` members.
-- The service role key lives only on the backend; the browser only ever sees
-  signed upload URLs and public read URLs.
-- Attachment bucket is public-read for simple `<img>`/`<audio>` playback. If you
-  need private attachments, flip the bucket to private and return signed read URLs
-  from a backend route instead.
-
-## Deployment
-
-See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the full production setup:
-Vercel + Railway, custom domain (`atharvintelligence.com`), and SSL.
+- Never commit `.env`, `.env.local`, service-role keys, JWT secrets, or real credentials.
+- Treat `SUPABASE_SERVICE_ROLE_KEY` as a backend-only secret.
+- Only expose values prefixed with `NEXT_PUBLIC_` when they are intentionally safe for the browser.
+- Use a strong, unique `ADMIN_JWT_SECRET` in production and rotate it if it is exposed.
