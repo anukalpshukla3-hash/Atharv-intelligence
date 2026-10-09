@@ -1,4 +1,4 @@
-# Atharv Intelligence
+# Atharv Intelligence[AI]
 
 A sleek, "Wizard of Oz" style AI companion platform. Visitors chat with what looks like
 an AI reasoning interface — sending text, images, and voice notes — while all traffic is
