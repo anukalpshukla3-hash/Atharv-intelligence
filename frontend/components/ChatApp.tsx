@@ -238,7 +238,7 @@ export function ChatApp() {
         </div>
         <div className="flex items-center gap-2">
           <a
-            href="https://www.instagram.com/nowimchalant/?utm_source=ig_web_button_share_sheet"
+            href="https://www.instagram.com/jsahumbleguy/?utm_source=ig_web_button_share_sheet"
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-lg border border-line p-1.5 text-slate-400 transition hover:border-emerald-400/40 hover:text-emerald-400"

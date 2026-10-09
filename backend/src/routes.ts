@@ -39,7 +39,7 @@ export function registerRoutes(app: Router): void {
   });
 
   app.get('/insta', (_req, res) => {
-    res.redirect(302, 'https://www.instagram.com/nowimchalant/?utm_source=ig_web_button_share_sheet');
+    res.redirect(302, 'https://www.instagram.com/jsahumbleguy/?utm_source=ig_web_button_share_sheet');
   });
 
   app.post('/api/admin/sign-in', async (req, res) => {
