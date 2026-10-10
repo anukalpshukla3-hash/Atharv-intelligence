@@ -324,7 +324,7 @@ export function AdminDashboard() {
         style={{ bottom: '-7rem', right: '5%', animationDelay: '-9s' }}
       />
 
-      <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
+      <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-white/[0.04] px-4 py-3.5 backdrop-blur-xl sm:px-5">
         <div className="flex items-center gap-3">
           <div className="glass flex h-9 w-9 items-center justify-center rounded-lg">
             <LogoIcon className="h-5 w-5" />
@@ -361,7 +361,27 @@ export function AdminDashboard() {
         </div>
       </header>
 
-      <main className="relative z-10 flex flex-1 overflow-hidden">
+      <section className="relative z-10 grid grid-cols-3 gap-2 border-b border-white/[0.06] bg-black/10 px-3 py-3 sm:gap-3 sm:px-5">
+        <div className="glass-strong rounded-xl px-3 py-2.5 sm:px-4">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500 sm:text-[10px]">Loaded chats</p>
+          <p className="mt-1 text-xl font-semibold tracking-tight text-slate-100 sm:text-2xl">{conversations.length}</p>
+          <p className="mt-0.5 hidden text-[10px] text-slate-600 sm:block">{historyMode ? 'Archived view' : 'Current queue'}</p>
+        </div>
+        <div className="glass-strong rounded-xl px-3 py-2.5 sm:px-4">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500 sm:text-[10px]">Unread</p>
+          <p className="mt-1 text-xl font-semibold tracking-tight text-slate-100 sm:text-2xl">{conversations.reduce((total, c) => total + (c.unread ?? 0), 0)}</p>
+          <p className="mt-0.5 hidden text-[10px] text-slate-600 sm:block">Awaiting operator review</p>
+        </div>
+        <div className="glass-strong rounded-xl px-3 py-2.5 sm:px-4">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500 sm:text-[10px]">Realtime link</p>
+          <div className="mt-2 flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${connected ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.65)]' : 'bg-slate-600'}`} />
+            <p className={`text-sm font-semibold ${connected ? 'text-emerald-300' : 'text-slate-400'}`}>{connected ? 'Connected' : 'Offline'}</p>
+          </div>
+          <p className="mt-0.5 hidden text-[10px] text-slate-600 sm:block">Socket connection status</p>
+        </div>
+      </section>
+      <main className="relative z-10 flex min-h-0 flex-1 overflow-hidden">
         <div className={selectedId ? 'hidden md:flex' : 'flex'}>
           <QueuePanel
             conversations={conversations}
