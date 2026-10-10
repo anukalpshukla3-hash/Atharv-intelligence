@@ -222,7 +222,7 @@ export function ChatApp() {
         style={{ bottom: '-7rem', right: '6%', animationDelay: '-9s' }}
       />
 
-      <header className="glass relative z-10 mx-auto mt-4 flex w-full max-w-4xl items-center justify-between gap-3 rounded-2xl px-4 py-2.5 animate-fade-up sm:px-5">
+      <header className="glass relative z-10 mx-auto mt-4 flex w-[calc(100%-2rem)] max-w-6xl items-center justify-between gap-3 rounded-2xl px-4 py-3 animate-fade-up sm:w-[calc(100%-3rem)] sm:px-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5">
             <LogoIcon className="h-6 w-6" />
@@ -261,8 +261,45 @@ export function ChatApp() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col overflow-hidden px-4 sm:px-6">
-        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pb-4 pt-2">
+      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 gap-5 overflow-hidden px-4 py-4 sm:px-6">
+        <aside className="hidden w-56 shrink-0 flex-col gap-3 py-4 xl:flex">
+          <div className="glass-strong rounded-2xl p-4">
+            <div className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${connected ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]' : 'bg-amber-400'}`} />
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                {connected ? 'Live connection' : 'Reconnecting'}
+              </p>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-slate-100">Human support</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              Your messages go directly to the Atharv Intelligence operator.
+            </p>
+          </div>
+          <div className="glass-strong rounded-2xl p-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">Session overview</p>
+            <div className="mt-4 flex items-end justify-between">
+              <span className="text-3xl font-semibold tracking-tight text-white">{messages.length}</span>
+              <span className="pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">messages</span>
+            </div>
+            <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/5">
+              <div className="h-full rounded-full bg-gradient-to-r from-accent via-sky-400 to-mag transition-all duration-500" style={{ width: `${Math.min(messages.length * 8, 100)}%` }} />
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-600">This chat syncs with your saved conversation.</p>
+          </div>
+          <div className="glass-strong rounded-2xl p-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">Quick guide</p>
+            <ul className="mt-3 space-y-3 text-xs text-slate-400">
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" /><span>Text, images and voice notes are supported.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-mag" /><span>Keep this tab open for live replies.</span></li>
+              <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400" /><span>Replies are sent by a human operator.</span></li>
+            </ul>
+          </div>
+          <div className="mt-auto px-2 pb-2">
+            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-slate-700">Atharv Intelligence / live workspace</p>
+          </div>
+        </aside>
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pb-4 pt-2">
           {showHero && (
             <div className="flex h-full flex-col items-center justify-center gap-6">
               <div className="glass flex flex-col items-center rounded-3xl p-8 text-center shadow-panel animate-fade-up">
@@ -330,6 +367,7 @@ export function ChatApp() {
             Atharv Intelligence · responses are human-reviewed in real time
           </p>
         </div>
+        </section>
       </main>
     </div>
   );

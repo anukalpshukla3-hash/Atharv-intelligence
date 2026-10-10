@@ -98,3 +98,64 @@ body {
   background-clip: text;
   color: transparent;
 }
+
+
+/* Command-centre polish: subtle depth, responsive motion, and accessible focus. */
+:root {
+  --surface-glass: rgba(13, 15, 27, 0.72);
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(77, 141, 255, 0.08), transparent 48%),
+    #07070b;
+}
+
+::selection {
+  color: #fff;
+  background: rgba(77, 141, 255, 0.42);
+}
+
+button, a, input, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid rgba(107, 162, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.glass-strong {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(22, 25, 43, 0.78), rgba(10, 11, 19, 0.68));
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 18px 42px -28px rgba(0, 0, 0, 0.95);
+}
+
+.glass-strong::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255,255,255,0.035), transparent 36%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
