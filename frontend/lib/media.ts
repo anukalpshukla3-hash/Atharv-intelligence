@@ -5,10 +5,13 @@ import { env } from './env';
 export async function uploadMedia(
   file: File,
   folder: string,
+  adminToken?: string,
 ): Promise<{ url: string; mimeType: string }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (adminToken) headers.Authorization = `Bearer ${adminToken}`;
   const res = await fetch(`${env.apiUrl}/api/upload-url`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ folder, mimeType: file.type || 'application/octet-stream' }),
   });
   if (!res.ok) throw new Error('Could not prepare upload.');

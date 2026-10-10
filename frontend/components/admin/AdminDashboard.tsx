@@ -246,7 +246,7 @@ export function AdminDashboard() {
   async function handleReplyMedia(file: File) {
     setUploadingReply(true);
     try {
-      const { url, mimeType } = await uploadMedia(file, 'admin');
+      const { url, mimeType } = await uploadMedia(file, 'admin', token ?? undefined);
       sendReply({ kind: 'image', mediaUrl: url, mimeType });
     } catch {
       /* noop */
@@ -261,7 +261,7 @@ export function AdminDashboard() {
       const file = new File([blob], `admin-voice-${Date.now()}.webm`, {
         type: blob.type || 'audio/webm',
       });
-      const { url, mimeType } = await uploadMedia(file, 'voice');
+      const { url, mimeType } = await uploadMedia(file, 'voice', token ?? undefined);
       sendReply({ kind: 'voice', mediaUrl: url, mimeType });
     } catch {
       /* noop */
