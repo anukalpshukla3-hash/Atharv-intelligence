@@ -196,10 +196,13 @@ export function registerRoutes(app: Router): void {
     res.json(data);
   });
 
-  app.get('/api/conversations/:visitorId/messages', visitorHistoryRateLimit, async (req, res) => {
-    const visitorId = req.params.visitorId;
+  // Visitor IDs are bearer credentials. Keep them out of the URL so they aren't
+  // copied into URL-based logs, browser history, or referrer metadata.
+  app.get('/api/conversations/me/messages', visitorHistoryRateLimit, async (req, res) => {
+    const header = req.headers.authorization ?? '';
+    const visitorId = header.startsWith('Bearer ') ? header.slice(7) : '';
     if (!/^[A-Za-z0-9_-]{16,64}$/.test(visitorId)) {
-      res.status(400).json({ error: 'Invalid visitor session.' });
+      res.status(401).json({ error: 'A valid visitor session is required.' });
       return;
     }
     const { data: conversation } = await db
@@ -218,7 +221,7 @@ export function registerRoutes(app: Router): void {
       .eq('conversation_id', conversation.id as string)
       .order('created_at', { ascending: true });
     if (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Could not load conversation history.' });
       return;
     }
     res.json({ conversation, messages });

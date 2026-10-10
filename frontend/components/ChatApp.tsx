@@ -52,7 +52,7 @@ export function ChatApp() {
 
   const refreshHistory = useCallback(() => {
     if (!visitorId) return;
-    fetch(`${env.apiUrl}/api/conversations/${visitorId}/messages`)
+    fetch(`${env.apiUrl}/api/conversations/me/messages`, { headers: { Authorization: `Bearer ${visitorId}` } })
       .then((r) => r.json())
       .then((data) => {
         if (data.conversation) setConversationId(data.conversation.id);
@@ -63,7 +63,7 @@ export function ChatApp() {
 
   useEffect(() => {
     if (!visitorId) return;
-    fetch(`${env.apiUrl}/api/conversations/${visitorId}/messages`)
+    fetch(`${env.apiUrl}/api/conversations/me/messages`, { headers: { Authorization: `Bearer ${visitorId}` } })
       .then((r) => r.json())
       .then((data) => {
         if (data.conversation) setConversationId(data.conversation.id);
