@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "nanoid": "^5.0.7",
+    "nanoid": "^6.0.2",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
