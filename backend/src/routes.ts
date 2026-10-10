@@ -2,7 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid';
 import { config } from './config.js';
 import { db, authClient, publicUrl } from './db.js';
-import { signAdminToken, verifyAdminToken, type AdminPayload } from './auth.js';
+import { signAdminToken, verifyAdminToken, isAdminUser, type AdminPayload } from './auth.js';
 
 const EXTENSIONS: Record<string, string> = {
   'image/png': 'png',
@@ -21,6 +21,37 @@ function mimeToExt(mime: string): string {
   return EXTENSIONS[mime.toLowerCase()] ?? 'bin';
 }
 
+function createRateLimiter(windowMs: number, maxRequests: number) {
+  const buckets = new Map<string, { count: number; resetAt: number }>();
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const now = Date.now();
+    const key = req.ip || req.socket.remoteAddress || 'unknown';
+    let bucket = buckets.get(key);
+    if (!bucket || bucket.resetAt <= now) {
+      bucket = { count: 0, resetAt: now + windowMs };
+      buckets.set(key, bucket);
+    }
+    bucket.count += 1;
+    res.setHeader('RateLimit-Limit', String(maxRequests));
+    res.setHeader('RateLimit-Remaining', String(Math.max(0, maxRequests - bucket.count)));
+    res.setHeader('RateLimit-Reset', String(Math.ceil(bucket.resetAt / 1000)));
+    if (buckets.size > 5000) {
+      for (const [ip, item] of buckets) {
+        if (item.resetAt <= now) buckets.delete(ip);
+      }
+    }
+    if (bucket.count > maxRequests) {
+      res.status(429).json({ error: 'Too many requests. Please wait and try again.' });
+      return;
+    }
+    next();
+  };
+}
+
+const signInRateLimit = createRateLimiter(15 * 60 * 1000, 10);
+const uploadRateLimit = createRateLimiter(60 * 1000, 20);
+const visitorHistoryRateLimit = createRateLimiter(60 * 1000, 90);
+
 function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization ?? '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
@@ -29,8 +60,16 @@ function requireAdmin(req: Request, res: Response, next: NextFunction): void {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
-  (req as Request & { admin?: AdminPayload }).admin = payload;
-  next();
+  void isAdminUser(payload.sub).then((isAdmin) => {
+    if (!isAdmin) {
+      res.status(401).json({ error: 'Admin access has been revoked.' });
+      return;
+    }
+    (req as Request & { admin?: AdminPayload }).admin = payload;
+    next();
+  }).catch(() => {
+    res.status(503).json({ error: 'Could not verify admin access. Please retry.' });
+  });
 }
 
 export function registerRoutes(app: Router): void {
@@ -42,13 +81,23 @@ export function registerRoutes(app: Router): void {
     res.redirect(302, 'https://www.instagram.com/jsahumbleguy/?utm_source=ig_web_button_share_sheet');
   });
 
-  app.post('/api/admin/sign-in', async (req, res) => {
+  app.post('/api/admin/sign-in', signInRateLimit, async (req, res) => {
     const { email, password } = req.body ?? {};
-    if (typeof email !== 'string' || typeof password !== 'string') {
-      res.status(400).json({ error: 'Email and password are required.' });
+    if (
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      email.trim().length === 0 ||
+      email.length > 254 ||
+      password.length === 0 ||
+      password.length > 1024
+    ) {
+      res.status(400).json({ error: 'A valid email and password are required.' });
       return;
     }
-    const { data, error } = await authClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await authClient.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
     if (error || !data.user) {
       res.status(401).json({ error: 'Invalid credentials.' });
       return;
@@ -147,11 +196,19 @@ export function registerRoutes(app: Router): void {
     res.json(data);
   });
 
-  app.get('/api/conversations/:visitorId/messages', async (req, res) => {
+  // Visitor IDs are bearer credentials. Keep them out of the URL so they aren't
+  // copied into URL-based logs, browser history, or referrer metadata.
+  app.get('/api/conversations/me/messages', visitorHistoryRateLimit, async (req, res) => {
+    const header = req.headers.authorization ?? '';
+    const visitorId = header.startsWith('Bearer ') ? header.slice(7) : '';
+    if (!/^[A-Za-z0-9_-]{16,64}$/.test(visitorId)) {
+      res.status(401).json({ error: 'A valid visitor session is required.' });
+      return;
+    }
     const { data: conversation } = await db
       .from('conversations')
       .select('*')
-      .eq('visitor_id', req.params.visitorId)
+      .eq('visitor_id', visitorId)
       .neq('status', 'closed')
       .maybeSingle();
     if (!conversation) {
@@ -164,20 +221,35 @@ export function registerRoutes(app: Router): void {
       .eq('conversation_id', conversation.id as string)
       .order('created_at', { ascending: true });
     if (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Could not load conversation history.' });
       return;
     }
     res.json({ conversation, messages });
   });
 
-  app.post('/api/upload-url', async (req, res) => {
+  app.post('/api/upload-url', uploadRateLimit, async (req, res) => {
     const { folder, mimeType } = req.body ?? {};
-    if (typeof mimeType !== 'string' || !mimeType) {
+    if (typeof mimeType !== 'string' || !mimeType.trim()) {
       res.status(400).json({ error: 'mimeType is required.' });
       return;
     }
-    const safeFolder = typeof folder === 'string' && folder.match(/^[a-z0-9_-]+$/i) ? folder : 'user';
-    const path = `${safeFolder}/${Date.now()}-${uuidv4()}.${mimeToExt(mimeType)}`;
+    const normalizedMime = mimeType.toLowerCase().trim();
+    if (!Object.prototype.hasOwnProperty.call(EXTENSIONS, normalizedMime)) {
+      res.status(400).json({ error: 'Unsupported attachment type.' });
+      return;
+    }
+    const allowedFolders = new Set(['user', 'voice', 'admin']);
+    const safeFolder = typeof folder === 'string' && allowedFolders.has(folder) ? folder : 'user';
+    if (safeFolder === 'admin') {
+      const header = req.headers.authorization ?? '';
+      const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+      const payload = token ? verifyAdminToken(token) : null;
+      if (!payload || !(await isAdminUser(payload.sub))) {
+        res.status(401).json({ error: 'Admin authorization is required for operator uploads.' });
+        return;
+      }
+    }
+    const path = `${safeFolder}/${Date.now()}-${uuidv4()}.${mimeToExt(normalizedMime)}`;
     const { data, error } = await db.storage.from(config.storageBucket).createSignedUploadUrl(path);
     if (error) {
       res.status(500).json({ error: error.message });

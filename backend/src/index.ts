@@ -15,7 +15,21 @@ process.on('uncaughtException', (err) => {
 });
 
 const app = express();
-app.use(cors({ origin: config.corsOrigins, credentials: true }));
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
+
+// Defensive response headers for the public API and health endpoint.
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
+  if (_req.secure || _req.header('x-forwarded-proto') === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+app.use(cors({ origin: config.corsOrigins, credentials: true, maxAge: 600 }));
 app.use(express.json({ limit: '2mb' }));
 
 const server = http.createServer(app);

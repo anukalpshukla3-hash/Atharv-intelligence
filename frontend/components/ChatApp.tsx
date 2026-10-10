@@ -23,10 +23,10 @@ function getVisitorId(): string {
 }
 
 const SUGGESTIONS = [
-  'What can you do?',
-  'Help me plan my day',
-  'Explain quantum computing simply',
-  'Give me a creative story idea',
+  'I need help with a question',
+  'Can you explain a concept?',
+  'I want to share an idea',
+  'I need help troubleshooting something',
 ];
 
 export function ChatApp() {
@@ -52,7 +52,7 @@ export function ChatApp() {
 
   const refreshHistory = useCallback(() => {
     if (!visitorId) return;
-    fetch(`${env.apiUrl}/api/conversations/${visitorId}/messages`)
+    fetch(`${env.apiUrl}/api/conversations/me/messages`, { headers: { Authorization: `Bearer ${visitorId}` } })
       .then((r) => r.json())
       .then((data) => {
         if (data.conversation) setConversationId(data.conversation.id);
@@ -63,7 +63,7 @@ export function ChatApp() {
 
   useEffect(() => {
     if (!visitorId) return;
-    fetch(`${env.apiUrl}/api/conversations/${visitorId}/messages`)
+    fetch(`${env.apiUrl}/api/conversations/me/messages`, { headers: { Authorization: `Bearer ${visitorId}` } })
       .then((r) => r.json())
       .then((data) => {
         if (data.conversation) setConversationId(data.conversation.id);
@@ -81,6 +81,10 @@ export function ChatApp() {
       refreshHistory();
     };
     const onDisconnect = () => setConnected(false);
+    const onConnectError = () => {
+      setConnected(false);
+      setNotice('Live support is temporarily unreachable. Check your connection and retry.');
+    };
     const onAck = ({ message }: { message: ChatMessage }) => {
       setPending((p) => p.slice(1));
       setMessages((m) => [...m, message]);
@@ -106,6 +110,7 @@ export function ChatApp() {
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
     socket.on('user:ack', onAck);
     socket.on('user:message', onUserMessage);
     socket.on('user:typing', onTyping);
@@ -117,6 +122,7 @@ export function ChatApp() {
       clearInterval(poll);
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
       socket.off('user:ack', onAck);
       socket.off('user:message', onUserMessage);
       socket.off('user:typing', onTyping);
@@ -222,7 +228,7 @@ export function ChatApp() {
         style={{ bottom: '-7rem', right: '6%', animationDelay: '-9s' }}
       />
 
-      <header className="glass relative z-10 mx-auto mt-4 flex w-[calc(100%-2rem)] max-w-6xl items-center justify-between gap-3 rounded-2xl px-4 py-3 animate-fade-up sm:w-[calc(100%-3rem)] sm:px-5">
+      <header className="glass relative z-10 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-7xl items-center justify-between gap-3 rounded-2xl px-4 py-3 animate-fade-up sm:w-[calc(100%-2.5rem)] sm:px-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5">
             <LogoIcon className="h-6 w-6" />
@@ -232,7 +238,7 @@ export function ChatApp() {
               Atharv Intelligence
             </p>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400">
-              reasoning interface
+              human support · real time
             </p>
           </div>
         </div>
@@ -261,7 +267,7 @@ export function ChatApp() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 gap-5 overflow-hidden px-4 py-4 sm:px-6">
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 gap-5 overflow-hidden px-3 py-3 sm:px-5 sm:py-4">
         <aside className="hidden w-56 shrink-0 flex-col gap-3 py-4 xl:flex">
           <div className="glass-strong rounded-2xl p-4">
             <div className="flex items-center gap-2">
@@ -298,7 +304,7 @@ export function ChatApp() {
             <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-slate-700">Atharv Intelligence / live workspace</p>
           </div>
         </aside>
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <section className="support-panel flex min-w-0 flex-1 flex-col overflow-hidden">
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pb-4 pt-2">
           {showHero && (
             <div className="flex h-full flex-col items-center justify-center gap-6">
@@ -306,11 +312,14 @@ export function ChatApp() {
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-accent/30 bg-ink-800 shadow-glow">
                   <LogoIcon className="h-9 w-9" />
                 </div>
-                <h1 className="text-xl font-semibold tracking-wide text-slate-100">
-                  Atharv Intelligence
+                <span className="mb-4 rounded-full border border-emerald-400/25 bg-emerald-400/[0.08] px-3 py-1 font-mono text-[9px] uppercase tracking-[0.22em] text-emerald-300">
+                  Human-operated support
+                </span>
+                <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                  What can we help with?
                 </h1>
-                <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.25em] text-slate-500">
-                  how can I help you?
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-400">
+                  Send a message, image, or voice note. A human operator will reply right here.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                   {SUGGESTIONS.map((s) => (
@@ -325,10 +334,8 @@ export function ChatApp() {
                   ))}
                 </div>
               </div>
-              <p className="max-w-sm text-center font-mono text-[11px] leading-relaxed text-slate-600">
-                text · image · voice
-                <br />
-                real-time reasoning with a personal touch
+              <p className="max-w-sm text-center font-mono text-[10px] uppercase tracking-[0.2em] leading-relaxed text-slate-600">
+                Text · images · voice notes · live replies
               </p>
             </div>
           )}
@@ -341,7 +348,7 @@ export function ChatApp() {
           )}
 
           {awaitingReply && !adminTyping && (
-            <TypingIndicator label="Atharv Intelligence is processing…" />
+            <TypingIndicator label="Waiting for a human operator reply…" />
           )}
 
           {adminTyping && (

@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { db, publicUrl } from './db.js';
+import { config } from './config.js';
 import { verifyAdminToken, isAdminUser, type AdminPayload } from './auth.js';
 import type { Message, Conversation, SendPayload } from './types.js';
 
@@ -17,7 +18,50 @@ function rateLimited(visitorId: string, max = 6, windowMs = 10_000): boolean {
   }
   hits.push(now);
   visitorRate.set(visitorId, hits);
+  if (visitorRate.size > 10000) {
+    for (const [id, timestamps] of visitorRate) {
+      if (!timestamps.length || now - timestamps[timestamps.length - 1] >= windowMs) visitorRate.delete(id);
+    }
+  }
   return false;
+}
+
+const allowedMimeTypes = new Set([
+  'image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif',
+  'audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/wav',
+]);
+
+function normalizeSendPayload(input: unknown): SendPayload | null {
+  if (!input || typeof input !== 'object') return null;
+  const candidate = input as Record<string, unknown>;
+  const kind = candidate.kind ?? (
+    typeof candidate.content === 'string' && candidate.content.length > 0
+      ? 'text'
+      : typeof candidate.mediaUrl === 'string' ? 'image' : null
+  );
+
+  if (kind === 'text') {
+    if (typeof candidate.content !== 'string') return null;
+    const content = candidate.content.trim();
+    if (!content || content.length > 10000) return null;
+    return { kind: 'text', content };
+  }
+
+  if (kind !== 'image' && kind !== 'voice') return null;
+  if (typeof candidate.mediaUrl !== 'string' || candidate.mediaUrl.length > 2048) return null;
+  if (typeof candidate.mimeType !== 'string') return null;
+  const mimeType = candidate.mimeType.toLowerCase().trim();
+  if (!allowedMimeTypes.has(mimeType)) return null;
+  if (kind === 'image' && !mimeType.startsWith('image/')) return null;
+  if (kind === 'voice' && !mimeType.startsWith('audio/')) return null;
+  const base = `${config.supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/${config.storageBucket}/`;
+  if (!candidate.mediaUrl.startsWith(base)) return null;
+  return { kind, mediaUrl: candidate.mediaUrl, mimeType };
+}
+
+function isConversationId(value: unknown): value is string {
+  return typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 async function getConversation(id: string): Promise<Conversation | null> {
@@ -71,9 +115,14 @@ async function insertMessage(  conversationId: string,
   return data as Message;
 }
 
-async function handleUserSend(socket: Socket, payload: SendPayload): Promise<void> {
+async function handleUserSend(socket: Socket, incoming: unknown): Promise<void> {
   const visitorId = socket.data.visitorId as string | undefined;
   if (!visitorId) return;
+  const payload = normalizeSendPayload(incoming);
+  if (!payload) {
+    socket.emit('user:error', { message: 'Invalid message. Use text, an image, or a supported voice note.' });
+    return;
+  }
   if (rateLimited(visitorId)) {
     socket.emit('user:error', { message: 'You are sending messages too quickly. Please wait a moment.' });
     return;
@@ -92,11 +141,20 @@ async function handleUserSend(socket: Socket, payload: SendPayload): Promise<voi
   }
 }
 
-async function handleAdminReply(socket: Socket, payload: SendPayload & { conversationId: string }): Promise<void> {
+async function handleAdminReply(socket: Socket, incoming: unknown): Promise<void> {
   const admin = socket.data.admin as AdminPayload | undefined;
   if (!admin) return;
+  const candidate = incoming && typeof incoming === 'object'
+    ? incoming as Record<string, unknown>
+    : {};
+  const conversationId = candidate.conversationId;
+  const payload = normalizeSendPayload(candidate);
+  if (!isConversationId(conversationId) || !payload) {
+    socket.emit('admin:error', { message: 'Invalid reply payload.' });
+    return;
+  }
   try {
-    const conversation = await getConversation(payload.conversationId);
+    const conversation = await getConversation(conversationId);
     if (!conversation) return;
     const message = await insertMessage(conversation.id, 'admin', payload);
     const fresh = await getConversation(conversation.id);
@@ -133,7 +191,8 @@ async function handleTyping(socket: Socket, payload: { conversationId?: string; 
     const conversation = payload.conversationId
       ? await getConversation(payload.conversationId)
       : await getOrCreateConversation(visitorId);
-    if (!conversation) return;
+    if (!conversation || conversation.visitor_id !== visitorId) return;
+    if (typeof payload.isTyping !== 'boolean') return;
     for (const admin of adminSockets) {
       admin.emit('admin:typing', {
         conversationId: conversation.id,
@@ -220,7 +279,7 @@ export function registerSocketHandlers(io: Server): void {
         socket.data.admin = payload;
         return next();
       }
-      if (auth.role === 'visitor' && typeof auth.visitorId === 'string' && auth.visitorId.length >= 8) {
+      if (auth.role === 'visitor' && typeof auth.visitorId === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(auth.visitorId)) {
         socket.data.visitorId = auth.visitorId;
         return next();
       }

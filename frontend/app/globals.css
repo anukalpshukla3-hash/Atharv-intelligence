@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 
 :root {
   color-scheme: dark;
@@ -30,8 +29,9 @@ body {
 
 .bg-vignette {
   background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(77, 141, 255, 0.09), transparent 60%),
-    radial-gradient(1000px 520px at 90% 110%, rgba(217, 70, 239, 0.07), transparent 60%);
+    radial-gradient(950px 650px at 8% -8%, rgba(56, 189, 248, 0.12), transparent 62%),
+    radial-gradient(850px 560px at 100% 105%, rgba(139, 92, 246, 0.11), transparent 62%),
+    radial-gradient(700px 420px at 55% 45%, rgba(99, 102, 241, 0.035), transparent 72%);
 }
 
 .glass {
@@ -100,14 +100,17 @@ body {
 }
 
 
-/* Command-centre polish: subtle depth, responsive motion, and accessible focus. */
+/* Command-centre styling: layered surfaces, accessible focus, and reduced motion. */
 :root {
-  --surface-glass: rgba(13, 15, 27, 0.72);
+  --surface-glass: rgba(13, 15, 27, 0.78);
+  --surface-border: rgba(148, 163, 184, 0.15);
+  --accent-cyan: rgba(56, 189, 248, 0.18);
 }
 
 body {
   background:
-    radial-gradient(ellipse at 50% -20%, rgba(77, 141, 255, 0.08), transparent 48%),
+    radial-gradient(ellipse at 12% 0%, rgba(56, 189, 248, 0.08), transparent 40%),
+    radial-gradient(ellipse at 100% 100%, rgba(139, 92, 246, 0.07), transparent 42%),
     #07070b;
 }
 
@@ -149,6 +152,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   pointer-events: none;
   border-radius: inherit;
   background: linear-gradient(115deg, rgba(255,255,255,0.035), transparent 36%);
+}
+
+@media (min-width: 1280px) {
+  .support-panel {
+    min-height: 0;
+    border: 1px solid var(--surface-border);
+    border-radius: 1.5rem;
+    background: linear-gradient(155deg, rgba(17, 21, 37, 0.74), rgba(6, 8, 17, 0.76));
+    box-shadow:
+      0 24px 70px -42px rgba(0, 0, 0, 0.92),
+      inset 0 1px 0 rgba(255, 255, 255, 0.055);
+    backdrop-filter: blur(24px) saturate(135%);
+  }
+}
+
+.support-panel {
+  min-height: 0;
+}
+
+::placeholder {
+  opacity: 0.8;
 }
 
 @media (prefers-reduced-motion: reduce) {
