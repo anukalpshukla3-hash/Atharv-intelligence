@@ -119,8 +119,8 @@ export function AtharvStory() {
         </div>
         <div className="archive-grid">
           <figure className="archive-photo portrait-photo">
-            <Image src="/images/atharv-portrait.svg" alt="Atharv Gupta, in a casual portrait" fill sizes="(max-width: 700px) 100vw, 46vw" unoptimized />
-            <figcaption><span>01 / THE PERSON BEHIND THE SAVE</span><strong>Atharv, out of game.</strong></figcaption>
+            <Image src="/images/atharv-portrait.svg" alt="Atharv Gupta during a gym training session" fill sizes="(max-width: 700px) 100vw, 46vw" unoptimized />
+            <figcaption><span>01 / THE PERSON BEHIND THE SAVE</span><strong>Atharv, in training.</strong></figcaption>
           </figure>
           <figure className="archive-photo training-photo">
             <div className="training-visual" role="img" aria-label="A block-world illustration of a barbell and calisthenics rings">
