@@ -119,7 +119,7 @@ export function AtharvStory() {
         </div>
         <div className="archive-grid">
           <figure className="archive-photo portrait-photo">
-            <Image src="/images/atharv-portrait.webp" alt="Atharv Gupta, in a casual portrait" fill sizes="(max-width: 700px) 100vw, 46vw" />
+            <Image src="/images/atharv-portrait.svg" alt="Atharv Gupta, in a casual portrait" fill sizes="(max-width: 700px) 100vw, 46vw" unoptimized />
             <figcaption><span>01 / THE PERSON BEHIND THE SAVE</span><strong>Atharv, out of game.</strong></figcaption>
           </figure>
           <figure className="archive-photo training-photo">
