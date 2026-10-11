@@ -6,12 +6,12 @@
 
 -- ------------------------------------------------------------
 -- Conversations
--- One row per visitor (keyed by a browser-generated visitor id).
--- Visitors do NOT need accounts — they are tracked anonymously.
+-- Visitors are keyed by a browser-generated visitor id. Archived
+-- conversations remain in admin history; only one can be open at a time.
 -- ------------------------------------------------------------
 create table if not exists public.conversations (
   id              uuid primary key default gen_random_uuid(),
-  visitor_id      text not null unique,
+  visitor_id      text not null,
   visitor_label   text not null default 'Visitor',
   status          text not null default 'open' check (status in ('open', 'closed')), -- 'closed' = archived (kept in admin history)
   last_message_at timestamptz not null default now(),
@@ -20,6 +20,9 @@ create table if not exists public.conversations (
 );
 
 create index if not exists conversations_visitor_idx on public.conversations (visitor_id);
+create unique index if not exists conversations_one_open_per_visitor_idx
+  on public.conversations (visitor_id)
+  where status = 'open';
 create index if not exists conversations_last_message_idx on public.conversations (last_message_at desc);
 
 -- ------------------------------------------------------------

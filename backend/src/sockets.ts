@@ -69,14 +69,19 @@ async function getConversation(id: string): Promise<Conversation | null> {
   return (data as Conversation | null) ?? null;
 }
 
-async function getOrCreateConversation(visitorId: string): Promise<Conversation> {
+async function findOpenConversation(visitorId: string): Promise<Conversation | null> {
   const { data: existing } = await db
     .from('conversations')
     .select('*')
     .eq('visitor_id', visitorId)
-    .neq('status', 'closed')
+    .eq('status', 'open')
     .maybeSingle();
-  if (existing) return existing as Conversation;
+  return (existing as Conversation | null) ?? null;
+}
+
+async function getOrCreateConversation(visitorId: string): Promise<Conversation> {
+  const existing = await findOpenConversation(visitorId);
+  if (existing) return existing;
 
   const { data, error } = await db
     .from('conversations')
@@ -86,6 +91,12 @@ async function getOrCreateConversation(visitorId: string): Promise<Conversation>
     })
     .select()
     .single();
+  if (error?.code === '23505') {
+    // A simultaneous first message can race to create the one open
+    // conversation allowed for this visitor. Reuse the winner.
+    const concurrent = await findOpenConversation(visitorId);
+    if (concurrent) return concurrent;
+  }
   if (error) throw error;
   return data as Conversation;
 }
