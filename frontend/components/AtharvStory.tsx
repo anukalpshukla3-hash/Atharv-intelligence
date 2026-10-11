@@ -13,6 +13,8 @@ const chapters = [
 export function AtharvStory() {
   const [birthdayOpen, setBirthdayOpen] = useState(false);
   const [biome, setBiome] = useState<'forest' | 'cave' | 'taiga'>('forest');
+  const [worldEntered, setWorldEntered] = useState(false);
+  const [worldView, setWorldView] = useState<'shore' | 'home' | 'cave'>('shore');
   const [musicOpen, setMusicOpen] = useState(false);
   const [album, setAlbum] = useState<'beta' | 'alpha'>('beta');
 
@@ -59,8 +61,19 @@ export function AtharvStory() {
           </div>
           <p className="hero-index">PERSONAL ARCHIVE <span>—</span> 2026</p>
         </div>
-        <div className={`world-art biome-${biome}`} role="group" aria-label="Oakpearl’s Minecraft-inspired world">
+        <div className={`world-art biome-${biome}${worldEntered ? ' world-entered' : ''} view-${worldView}`} role="group" aria-label="Oakpearl’s Minecraft-inspired world">
+          <div className="world-stars" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
           <div className="world-sun" />
+          <div className="world-horizon" aria-hidden="true" />
+          <div className="voxel-ridge ridge-far" aria-hidden="true" /><div className="voxel-ridge ridge-mid" aria-hidden="true" />
+          <div className="voxel-island island-left" aria-hidden="true" /><div className="voxel-island island-right" aria-hidden="true" />
+          <div className="world-water" aria-hidden="true"><i /><i /><i /><i /></div>
+          <div className="world-shore" aria-hidden="true" />
+          <div className="voxel-cabin" aria-hidden="true"><i className="cabin-wall" /><i className="cabin-roof" /><i className="cabin-door" /><i className="cabin-window window-left" /><i className="cabin-window window-right" /><i className="cabin-chimney" /></div>
+          <div className="voxel-tree tree-a" aria-hidden="true"><i /><i /><i /><b /></div>
+          <div className="voxel-tree tree-b" aria-hidden="true"><i /><i /><i /><b /></div>
+          <div className="voxel-tree tree-c" aria-hidden="true"><i /><i /><i /><b /></div>
+          <div className="voxel-tree tree-d" aria-hidden="true"><i /><i /><i /><b /></div>
           <div className="world-moon" />
           <div className="world-mountains mountain-back" />
           <div className="world-mountains mountain-front" />
@@ -68,10 +81,13 @@ export function AtharvStory() {
           <div className="world-pine pine-two"><i /><i /><i /></div>
           <div className="world-cave" />
           <div className="world-ground" />
+          <div className="world-steps steps-a" aria-hidden="true" /><div className="world-steps steps-b" aria-hidden="true" />
+          <div className="voxel-flowers flowers-a" aria-hidden="true">✳　✳　✳</div>
           <div className="world-path" />
           <div className="world-block block-one" /><div className="world-block block-two" />
           <span className="world-coord">OAKPEARL <i /> UNSTABLE SMP</span>
           <div className="world-hud">
+            {!worldEntered ? <button className="enter-world" type="button" onClick={() => setWorldEntered(true)}>ENTER OAKPEARL’S WORLD <span aria-hidden="true">↗</span></button> : <div className="world-view-picker" role="group" aria-label="Choose a world viewpoint"><span>VIEWPOINT</span>{(['shore', 'home', 'cave'] as const).map((view) => <button type="button" key={view} onClick={() => setWorldView(view)} aria-pressed={worldView === view}>{view === 'shore' ? 'SHORE' : view === 'home' ? 'CABIN' : 'CAVE'}</button>)}</div>}
             <div className="biome-picker" role="group" aria-label="Choose a world biome">
               {(['forest', 'cave', 'taiga'] as const).map((option) => (
                 <button type="button" key={option} onClick={() => setBiome(option)} aria-pressed={biome === option}>
@@ -85,7 +101,7 @@ export function AtharvStory() {
               ))}
             </div>
           </div>
-          <p className="world-caption"><span>SEED 0615</span><span>{biome === 'cave' ? 'MOSS CAVERN' : biome === 'taiga' ? 'TAIGA EDGE' : 'THE OVERWORLD'}</span></p>
+          <p className="world-caption"><span>OAKPEARL’S OVERWORLD <i /> UNSTABLE SMP</span><span>{worldView === 'cave' || biome === 'cave' ? 'MOSS CAVERN' : worldView === 'home' ? 'THE CABIN BY THE SHORE' : biome === 'taiga' ? 'TAIGA EDGE' : 'SEED 0615 · THE OVERWORLD'}</span></p>
         </div>
         <a className="scroll-cue" href="#chapters"><span /> SCROLL TO EXPLORE</a>
       </section>
