@@ -289,3 +289,108 @@ html { scroll-behavior: smooth; scroll-padding-top: 82px; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
+
+/* Immersive voxel overworld: an original scene built from CSS blocks. */
+.story-hero { min-height: min(850px, calc(100svh - 76px)); height: min(850px, calc(100svh - 76px)); padding: 0; display: block; overflow: hidden; background: #283e31; }
+.story-hero::after { position: absolute; z-index: 1; inset: 0; content: ''; pointer-events: none; background: linear-gradient(90deg,rgba(19,31,24,.84) 0%,rgba(19,31,24,.58) 36%,rgba(19,31,24,.08) 78%),linear-gradient(0deg,rgba(18,29,22,.68),transparent 26%); }
+.hero-copy { position: absolute; z-index: 3; left: clamp(1.25rem, 8vw, 8rem); bottom: clamp(6rem, 13vh, 9rem); max-width: 660px; transition: opacity .7s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+.story-hero h1 { margin-top: 18px; font-size: clamp(5rem, 10vw, 9.5rem); }
+.hero-intro { max-width: 390px; text-shadow: 0 2px 16px rgba(0,0,0,.26); }
+.hero-actions { margin-top: 24px; }.hero-index { margin-top: 31px; }
+.world-art { position: absolute; z-index: 0; inset: 0; min-height: 100%; overflow: hidden; box-shadow: none; background-image: linear-gradient(180deg,#e8bb83 0%,#cf9870 42%,#829364 70%,#304733 100%); transform: scale(1.01); transform-origin: center; transition: filter .8s ease,transform 1.4s cubic-bezier(.2,.7,.2,1),background 1s ease; }
+.world-art::before { z-index: 6; opacity: .23; background-size: 52px 52px; mix-blend-mode: soft-light; }
+.world-art::after { z-index: 7; border: 0; background: linear-gradient(180deg,rgba(255,240,203,.12),transparent 27%,rgba(18,34,24,.14)); }
+.world-art .world-sun { top: 11%; right: 23%; width: clamp(65px,9vw,118px); height: clamp(65px,9vw,118px); background: #f1d998; box-shadow: 0 0 0 22px rgba(241,217,152,.11),0 0 80px 30px rgba(255,222,154,.22); animation:sun-drift 14s ease-in-out infinite alternate; }
+.world-horizon { position:absolute;z-index:0;inset:0;background:linear-gradient(180deg,rgba(232,187,131,.08),transparent 48%); }
+.world-stars { position:absolute;z-index:0;inset:0;opacity:0;transition:opacity .6s ease; }
+.world-stars i { position:absolute;width:3px;height:3px;background:#f6e8bc;box-shadow:0 0 8px rgba(255,245,200,.7); }
+.world-stars i:nth-child(1){left:12%;top:16%}.world-stars i:nth-child(2){left:34%;top:12%}.world-stars i:nth-child(3){left:46%;top:23%}.world-stars i:nth-child(4){left:63%;top:11%}.world-stars i:nth-child(5){left:76%;top:26%}.world-stars i:nth-child(6){left:88%;top:15%}.world-stars i:nth-child(7){left:54%;top:8%}.world-stars i:nth-child(8){left:21%;top:29%}.world-stars i:nth-child(9){left:70%;top:6%}
+.voxel-ridge { position:absolute;z-index:1;bottom:35%;left:-8%;width:116%;height:42%;clip-path:polygon(0 45%,10% 45%,10% 30%,18% 30%,18% 18%,26% 18%,26% 37%,34% 37%,34% 14%,42% 14%,42% 4%,51% 4%,51% 29%,59% 29%,59% 18%,70% 18%,70% 34%,78% 34%,78% 10%,86% 10%,86% 28%,100% 28%,100% 100%,0 100%);background:#8d916d;filter:drop-shadow(0 15px 0 rgba(33,53,39,.1));}
+.ridge-far { opacity:.52;transform:translate(-4%,4%) scale(1.08);background:#b4a779; }
+.ridge-mid { z-index:2;bottom:26%;height:39%;opacity:.83;background:#60744e;clip-path:polygon(0 43%,8% 43%,8% 24%,18% 24%,18% 38%,30% 38%,30% 15%,39% 15%,39% 30%,51% 30%,51% 11%,62% 11%,62% 35%,74% 35%,74% 17%,83% 17%,83% 28%,100% 28%,100% 100%,0 100%); }
+.voxel-island { position:absolute;z-index:3;bottom:26%;height:20%;background:linear-gradient(180deg,#82915b 0 13%,#5f7547 13% 36%,#514c36 36% 100%);box-shadow:inset 0 12px rgba(190,190,119,.22),0 12px 0 rgba(31,50,34,.18); }
+.island-left { left:-4%;width:49%;clip-path:polygon(0 20%,16% 20%,16% 9%,38% 9%,38% 0,67% 0,67% 18%,87% 18%,87% 34%,100% 34%,100% 100%,0 100%); }
+.island-right { right:-4%;width:46%;bottom:23%;height:25%;clip-path:polygon(0 31%,14% 31%,14% 16%,30% 16%,30% 0,56% 0,56% 12%,79% 12%,79% 28%,100% 28%,100% 100%,0 100%);background:linear-gradient(180deg,#85935b 0 12%,#4e6942 12% 38%,#484b36 38% 100%); }
+.world-water { position:absolute;z-index:2;bottom:0;left:26%;width:49%;height:32%;background:linear-gradient(180deg,#758b68,#526e59 44%,#364f45);clip-path:polygon(17% 0,84% 0,100% 100%,0 100%);box-shadow:inset 0 10px rgba(216,215,162,.3); }
+.world-water i { position:absolute;left:20%;width:32%;height:3px;background:rgba(219,222,173,.52);box-shadow:0 0 13px rgba(219,222,173,.28); }
+.world-water i:nth-child(1){top:22%;left:35%}.world-water i:nth-child(2){top:43%;left:17%;width:47%}.world-water i:nth-child(3){top:64%;left:41%;width:35%}.world-water i:nth-child(4){top:80%;left:24%;width:24%}
+.world-shore { position:absolute;z-index:4;right:21%;bottom:17%;width:30%;height:19%;background:repeating-linear-gradient(0deg,#9d8559 0 22px,#b09a68 22px 44px);clip-path:polygon(23% 0,100% 0,100% 100%,0 100%,0 69%,18% 69%);transform:skewY(-4deg); }
+.world-ground { z-index:4;height:25%;background:repeating-linear-gradient(0deg,#3c5738 0 25px,#465c3a 25px 50px); }
+.world-ground::before { height:15px;background:repeating-linear-gradient(90deg,#87905b 0 46px,#9b9c65 46px 92px); }
+.world-path { z-index:5;right:35%;bottom:0;width:23%;height:30%;background:repeating-linear-gradient(0deg,#a88c61 0 23px,#927b54 23px 46px);clip-path:polygon(42% 0,62% 0,100% 100%,0 100%); }
+.world-steps { position:absolute;z-index:5;bottom:22%;width:80px;height:34px;background:linear-gradient(180deg,#81915a 0 12px,#67573d 12px 100%);box-shadow:0 34px 0 -1px #635239,0 35px 0 #89915d,0 68px 0 -2px #5c4d37; }
+.steps-a {left:8%}.steps-b {right:10%;bottom:25%;transform:scale(.72)}
+.voxel-cabin { position:absolute;z-index:5;right:27%;bottom:32%;width:clamp(104px,13vw,180px);height:clamp(98px,13vw,170px);transition:transform .9s cubic-bezier(.2,.7,.2,1);filter:drop-shadow(13px 13px 0 rgba(29,43,30,.2)); }
+.cabin-wall { position:absolute;left:12%;right:7%;bottom:0;height:62%;background:linear-gradient(90deg,#806344 0 12%,#9a7651 12% 23%,#765a3e 23% 27%,#9e7b54 27% 62%,#805d40 62% 100%);border:7px solid #584b35; }
+.cabin-roof {position:absolute;z-index:2;left:0;right:0;top:8%;height:38%;background:repeating-linear-gradient(90deg,#4f4936 0 15px,#62553a 15px 30px);clip-path:polygon(50% 0,100% 72%,100% 100%,0 100%,0 72%);border-bottom:10px solid #3f4933;}
+.cabin-door {position:absolute;z-index:3;left:46%;bottom:0;width:20%;height:43%;background:linear-gradient(90deg,#533f2b 0 72%,#aa8b57 72% 100%);border:4px solid #51422f;}
+.cabin-window {position:absolute;z-index:3;bottom:39%;width:18%;height:17%;background:#e5cd83;border:4px solid #534832;box-shadow:0 0 17px rgba(241,211,124,.42);}
+.window-left {left:19%}.window-right {right:18%}
+.cabin-chimney {position:absolute;z-index:1;top:0;right:22%;width:13%;height:27%;background:repeating-linear-gradient(180deg,#795d43 0 11px,#96734c 11px 22px);box-shadow:4px 0 #554630;}
+.voxel-tree {position:absolute;z-index:5;bottom:25%;width:clamp(45px,6vw,76px);height:clamp(122px,17vw,210px);transition:transform .9s cubic-bezier(.2,.7,.2,1);}
+.voxel-tree b {position:absolute;left:43%;bottom:0;width:19%;height:47%;background:repeating-linear-gradient(180deg,#735438 0 16px,#806044 16px 32px);box-shadow:5px 0 #59432f;}
+.voxel-tree i {position:absolute;z-index:1;left:50%;width:88%;height:36%;transform:translateX(-50%);background:linear-gradient(90deg,#37583b 0 38%,#4b6c42 38% 77%,#3a5d3a 77%);box-shadow:9px 9px 0 rgba(34,56,37,.44),inset 7px 0 rgba(141,160,92,.18);}
+.voxel-tree i:nth-child(1){top:0;width:54%;height:28%}.voxel-tree i:nth-child(2){top:22%}.voxel-tree i:nth-child(3){top:43%;width:100%;}
+.tree-a {left:12%;transform:scale(1.1)}.tree-b {left:34%;bottom:24%;transform:scale(.65)}.tree-c {right:10%;bottom:24%;transform:scale(.92)}.tree-d {right:38%;bottom:25%;transform:scale(.56)}
+.voxel-flowers {position:absolute;z-index:6;left:18%;bottom:25%;color:#d3bd76;font-size:17px;letter-spacing:8px;text-shadow:0 2px #485b37;}
+.biome-cave .world-sun {opacity:0}.biome-cave .world-stars {opacity:.8}.biome-cave {background-image:linear-gradient(180deg,#374b41 0%,#51684b 48%,#293b30 100%)}
+.biome-cave .voxel-ridge {filter:brightness(.54)}
+.biome-taiga .world-water {background:linear-gradient(180deg,#8c9680,#607563 50%,#3e584e)}
+.world-hud {z-index:10;right:clamp(16px,5vw,64px);bottom:clamp(44px,7vh,70px);left:auto;display:flex;align-items:flex-end;flex-direction:column;gap:12px;}
+.enter-world,.world-view-picker button {padding:12px 15px;border:1px solid rgba(248,242,218,.54);background:#25382b;color:#f4eed9;font-family:var(--font-roboto-mono),monospace;font-size:9px;letter-spacing:.13em;cursor:pointer;box-shadow:4px 4px 0 rgba(22,34,24,.28);}
+.enter-world span {margin-left:14px;color:#c6c78c;font-size:15px}.enter-world:hover,.world-view-picker button:hover {background:#506541;transform:translateY(-2px)}
+.world-view-picker {display:flex;align-items:center;gap:5px;padding:6px;background:rgba(31,46,34,.92);border:1px solid rgba(248,242,218,.28);}
+.world-view-picker span {margin:0 6px;color:#c6c78c;font-family:var(--font-roboto-mono),monospace;font-size:7px;letter-spacing:.1em}
+.world-view-picker button {padding:8px 9px;background:transparent;border-color:rgba(248,242,218,.2);font-size:7px;box-shadow:none}
+.world-view-picker button[aria-pressed=true] {background:#b7bd85;color:#1e2c20;border-color:#b7bd85}
+.biome-picker {top:auto;right:auto;bottom:0;left:0;justify-content:start}
+.biome-picker button {background:rgba(27,39,27,.9);font-size:7px}
+.world-coord {top:clamp(18px,4vh,34px);bottom:auto;left:clamp(18px,5vw,64px);padding:10px 12px;border-left:2px solid #c0c788;letter-spacing:.14em}
+.world-caption {z-index:9;right:clamp(18px,5vw,64px);bottom:clamp(19px,4vh,34px);left:clamp(18px,5vw,64px);font-size:8px;text-shadow:0 2px 8px rgba(0,0,0,.42)}
+.world-caption i {display:inline-block;width:5px;height:5px;margin:0 8px 1px;background:#b5c886}
+.scroll-cue {z-index:4;left:clamp(1.25rem,8vw,8rem);bottom:26px;color:rgba(250,246,226,.72)}
+.world-entered {transform:scale(1.055);filter:saturate(1.08)}
+.world-entered .hero-copy {opacity:.72;transform:translateY(8px)}
+.view-home .voxel-cabin {transform:scale(1.72) translate(-7%,6%);transform-origin:60% 100%}
+.view-home .tree-a {transform:scale(.72) translateX(-10%)}.view-home .tree-c {transform:scale(.7) translateX(12%)}
+.view-cave {filter:brightness(.72) saturate(.82)}.view-cave .world-stars {opacity:.8}.view-cave .voxel-cabin {transform:translate(22%,6%) scale(.76)}
+.view-cave .world-moon {display:block;opacity:.9}
+.view-cave .world-sun {opacity:0}
+.view-cave .world-water {filter:brightness(.65)}
+.world-moon {display:none}
+.world-art .world-mountains {z-index:2}
+@media (max-width:900px) {
+ .story-hero {min-height:calc(100svh - 76px);height:calc(100svh - 76px)}
+ .hero-copy {left:clamp(24px,7vw,60px);bottom:clamp(100px,15vh,150px)}
+ .world-art .world-sun {right:17%}
+ .voxel-cabin {right:24%}
+ .world-water {left:21%;width:58%}
+}
+@media (max-width:640px) {
+ .story-hero {min-height:calc(100svh - 66px);height:calc(100svh - 66px);padding:0}
+ .story-hero::after {background:linear-gradient(90deg,rgba(19,31,24,.67),rgba(19,31,24,.16) 95%),linear-gradient(0deg,rgba(18,29,22,.76),transparent 43%)}
+ .hero-copy {left:22px;right:22px;bottom:clamp(110px,17vh,150px)}
+ .story-hero h1 {font-size:clamp(4.7rem,19vw,7rem)}
+ .hero-intro {font-size:13px;line-height:1.6}
+ .hero-index {margin-top:18px;font-size:7px}
+ .world-art .world-sun {top:13%;right:14%;width:59px;height:59px}
+ .ridge-far {bottom:37%;height:35%}.ridge-mid {bottom:28%;height:36%}
+ .island-left {width:58%;bottom:27%}.island-right {width:50%;bottom:23%}
+ .world-water {left:20%;width:64%;height:28%}
+ .world-shore {right:13%;width:35%}
+ .voxel-cabin {right:22%;bottom:32%;width:104px;height:98px}
+ .voxel-tree {height:140px;width:48px}
+ .tree-a {left:4%}.tree-b {left:28%}.tree-c {right:3%}.tree-d {right:31%}
+ .world-hud {right:14px;bottom:48px;gap:8px}
+ .world-view-picker {gap:3px;padding:4px}.world-view-picker span {display:none}.world-view-picker button {padding:8px 7px;font-size:6px}
+ .enter-world {max-width:calc(100vw - 28px);padding:11px 10px;font-size:8px}
+ .biome-picker {max-width:calc(100vw - 28px);gap:3px}.biome-picker button {padding:6px 7px;font-size:6px}
+ .world-caption {bottom:16px;right:14px;left:14px;gap:8px;font-size:6px;letter-spacing:.06em}
+ .world-caption span:last-child {text-align:right}
+ .world-coord {top:13px;left:14px;font-size:7px}
+ .scroll-cue {left:22px;bottom:18px;font-size:7px}
+ .world-entered {transform:scale(1.08)}
+}
+@media (prefers-reduced-motion: reduce) {
+ .world-art,.hero-copy,.voxel-cabin,.voxel-tree,.world-entered .hero-copy {transition:none!important;animation:none!important}
+}
