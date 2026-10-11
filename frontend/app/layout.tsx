@@ -6,8 +6,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const robotoMono = Roboto_Mono({ subsets: ['latin'], variable: '--font-roboto-mono' });
 
 export const metadata: Metadata = {
-  title: 'Atharv Intelligence',
-  description: 'Atharv Intelligence — an advanced reasoning interface.',
+  title: 'Atharv Gupta — Personal Archive',
+  description: 'A mossy little field guide to Atharv Gupta: athlete, student, Minecraft builder, and anime fan.',
 };
 
 export default function RootLayout({
