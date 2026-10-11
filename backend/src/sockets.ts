@@ -118,6 +118,11 @@ async function insertMessage(  conversationId: string,
 async function handleUserSend(socket: Socket, incoming: unknown): Promise<void> {
   const visitorId = socket.data.visitorId as string | undefined;
   if (!visitorId) return;
+  const clientId = incoming && typeof incoming === 'object' &&
+    typeof (incoming as Record<string, unknown>).clientId === 'string' &&
+    /^temp-[A-Za-z0-9_-]{8,24}$/.test((incoming as Record<string, string>).clientId)
+    ? (incoming as Record<string, string>).clientId
+    : undefined;
   const payload = normalizeSendPayload(incoming);
   if (!payload) {
     socket.emit('user:error', { message: 'Invalid message. Use text, an image, or a supported voice note.' });
@@ -130,7 +135,7 @@ async function handleUserSend(socket: Socket, incoming: unknown): Promise<void> 
   try {
     const conversation = await getOrCreateConversation(visitorId);
     const message = await insertMessage(conversation.id, 'visitor', payload);
-    socket.emit('user:ack', { message });
+    socket.emit('user:ack', { message, ...(clientId ? { clientId } : {}) });
     const fresh = await getConversation(conversation.id);
     for (const admin of adminSockets) {
       admin.emit('admin:newMessage', { conversation: fresh ?? conversation, message });

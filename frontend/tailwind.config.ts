@@ -4,34 +4,34 @@ const config = {
     extend: {
       colors: {
         ink: {
-          950: '#07070b',
-          900: '#0b0b12',
-          850: '#0f0f18',
-          800: '#12121d',
-          700: '#1a1a28',
+          950: '#111a14',
+          900: '#152018',
+          850: '#1a271c',
+          800: '#202d22',
+          700: '#2e3b2e',
         },
         line: {
           DEFAULT: 'rgba(255,255,255,0.08)',
           soft: 'rgba(255,255,255,0.04)',
         },
         accent: {
-          DEFAULT: '#4d8dff',
-          bright: '#6ba2ff',
-          dim: '#2c5bbd',
+          DEFAULT: '#758652',
+          bright: '#9ba66b',
+          dim: '#53683f',
         },
         mag: {
-          DEFAULT: '#d946ef',
-          dim: '#a21caf',
+          DEFAULT: '#bd7850',
+          dim: '#93583b',
         },
-        mint: '#34d399',
+        mint: '#b7bd85',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-roboto-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       boxShadow: {
-        glow: '0 0 28px -6px rgba(77,141,255,0.55)',
-        'glow-mag': '0 0 28px -8px rgba(217,70,239,0.5)',
+        glow: '0 0 20px -8px rgba(155,166,107,0.35)',
+        'glow-mag': '0 0 20px -8px rgba(189,120,80,0.3)',
         panel: '0 24px 70px -24px rgba(0,0,0,0.85)',
       },
       keyframes: {

@@ -22,6 +22,14 @@ function getVisitorId(): string {
   return id;
 }
 
+function mergeMessages(current: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
+  const byId = new Map(current.map((message) => [message.id, message]));
+  for (const message of incoming) byId.set(message.id, message);
+  return Array.from(byId.values()).sort(
+    (left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime(),
+  );
+}
+
 const SUGGESTIONS = [
   'I need help with a question',
   'Can you explain a concept?',
@@ -49,25 +57,36 @@ export function ChatApp() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const historyRevision = useRef(0);
 
   const refreshHistory = useCallback(() => {
     if (!visitorId) return;
+    const revision = historyRevision.current;
     fetch(`${env.apiUrl}/api/conversations/me/messages`, { headers: { Authorization: `Bearer ${visitorId}` } })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Could not load message history.');
+        return r.json();
+      })
       .then((data) => {
+        if (revision !== historyRevision.current) return;
         if (data.conversation) setConversationId(data.conversation.id);
-        if (Array.isArray(data.messages)) setMessages(data.messages);
+        if (Array.isArray(data.messages)) setMessages((current) => mergeMessages(current, data.messages));
       })
       .catch(() => undefined);
   }, [visitorId]);
 
   useEffect(() => {
     if (!visitorId) return;
+    const revision = historyRevision.current;
     fetch(`${env.apiUrl}/api/conversations/me/messages`, { headers: { Authorization: `Bearer ${visitorId}` } })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Could not load message history.');
+        return r.json();
+      })
       .then((data) => {
+        if (revision !== historyRevision.current) return;
         if (data.conversation) setConversationId(data.conversation.id);
-        if (Array.isArray(data.messages)) setMessages(data.messages);
+        if (Array.isArray(data.messages)) setMessages((current) => mergeMessages(current, data.messages));
       })
       .catch(() => setNotice('Could not load previous messages.'));
   }, [visitorId]);
@@ -85,13 +104,16 @@ export function ChatApp() {
       setConnected(false);
       setNotice('Live support is temporarily unreachable. Check your connection and retry.');
     };
-    const onAck = ({ message }: { message: ChatMessage }) => {
-      setPending((p) => p.slice(1));
-      setMessages((m) => [...m, message]);
+    const onAck = ({ message, clientId }: { message: ChatMessage; clientId?: string }) => {
+      setPending((p) => {
+        const index = clientId ? p.findIndex((item) => item.id === clientId) : 0;
+        return index < 0 ? p : p.filter((_, itemIndex) => itemIndex !== index);
+      });
+      setMessages((current) => mergeMessages(current, [message]));
       setConversationId(message.conversation_id);
     };
     const onUserMessage = ({ message }: { message: ChatMessage }) => {
-      setMessages((m) => [...m, message]);
+      setMessages((current) => mergeMessages(current, [message]));
       setAdminTyping(false);
     };
     const onTyping = ({ isTyping }: { isTyping: boolean }) => setAdminTyping(isTyping);
@@ -102,6 +124,7 @@ export function ChatApp() {
       setNotice(message);
     };
     const onCleared = () => {
+      historyRevision.current += 1;
       setMessages([]);
       setPending([]);
       setConversationId(null);
@@ -176,7 +199,7 @@ export function ChatApp() {
       status: 'sending',
     };
     setPending((p) => [...p, temp]);
-    socket.emit('user:send', payload);
+      socket.emit('user:send', { ...payload, clientId: temp.id });
   }
 
   function handleSendText(text: string) {
@@ -219,7 +242,7 @@ export function ChatApp() {
   }
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden bg-ink-950">
+    <div id="chat" className="chat-section relative flex h-dvh flex-col overflow-hidden bg-ink-950">
       <div className="bg-grid pointer-events-none absolute inset-0" />
       <div className="bg-vignette pointer-events-none absolute inset-0" />
       <div className="orb animate-float h-96 w-96 bg-accent/25" style={{ top: '-10rem', left: '8%' }} />
@@ -267,7 +290,7 @@ export function ChatApp() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 gap-5 overflow-hidden px-3 py-3 sm:px-5 sm:py-4">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 gap-5 overflow-hidden px-3 py-3 sm:px-5 sm:py-4">
         <aside className="hidden w-56 shrink-0 flex-col gap-3 py-4 xl:flex">
           <div className="glass-strong rounded-2xl p-4">
             <div className="flex items-center gap-2">
@@ -288,7 +311,7 @@ export function ChatApp() {
               <span className="pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">messages</span>
             </div>
             <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/5">
-              <div className="h-full rounded-full bg-gradient-to-r from-accent via-sky-400 to-mag transition-all duration-500" style={{ width: `${Math.min(messages.length * 8, 100)}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-accent via-emerald-500 to-mag transition-all duration-500" style={{ width: `${Math.min(messages.length * 8, 100)}%` }} />
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-slate-600">This chat syncs with your saved conversation.</p>
           </div>
@@ -375,7 +398,7 @@ export function ChatApp() {
           </p>
         </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
