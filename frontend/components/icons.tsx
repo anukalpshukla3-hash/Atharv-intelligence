@@ -7,8 +7,8 @@ export function LogoIcon({ className }: IconProps) {
     <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden>
       <defs>
         <linearGradient id="logo-g" x1="0" y1="0" x2="32" y2="32">
-          <stop offset="0%" stopColor="#6ba2ff" />
-          <stop offset="100%" stopColor="#d946ef" />
+          <stop offset="0%" stopColor="#b7bd85" />
+          <stop offset="100%" stopColor="#bd7850" />
         </linearGradient>
       </defs>
       <path
@@ -23,7 +23,7 @@ export function LogoIcon({ className }: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
       />
-      <circle cx="22.5" cy="11.5" r="1.6" fill="#6ba2ff" />
+      <circle cx="22.5" cy="11.5" r="1.6" fill="#b7bd85" />
     </svg>
   );
 }
@@ -205,3 +205,4 @@ export function InstagramIcon({ className }: IconProps) {
     </svg>
   );
 }
+
