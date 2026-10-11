@@ -394,3 +394,6 @@ html { scroll-behavior: smooth; scroll-padding-top: 82px; }
 @media (prefers-reduced-motion: reduce) {
  .world-art,.hero-copy,.voxel-cabin,.voxel-tree,.world-entered .hero-copy {transition:none!important;animation:none!important}
 }
+
+/* Use the block-built silhouettes as the landscape's primary forms. */
+.world-pine,.world-mountains { display:none; }
